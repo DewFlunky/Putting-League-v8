@@ -1,59 +1,164 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Fall Line Putting League</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<title>Fall Line Putting League</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- CSS -->
-  <link rel="stylesheet" href="style.css" />
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: url("https://raw.githubusercontent.com/DewFlunky/Putting-League-v8/main/background.png") repeat;
+}
 
-  <!-- Cache Bust -->
-  <meta http-equiv="cache-control" content="no-cache" />
-  <meta http-equiv="expires" content="0" />
-  <meta http-equiv="pragma" content="no-cache" />
+.logo {
+  position: fixed;
+  top: 10px;
+  width: 140px;
+}
+
+.logo.left { left: 10px; }
+.logo.right { right: 10px; }
+
+.hidden { display: none; }
+
+.center {
+  text-align: center;
+  padding-top: 120px;
+}
+
+button {
+  padding: 10px 18px;
+  font-size: 16px;
+  margin: 8px;
+  cursor: pointer;
+}
+
+.card {
+  background: white;
+  margin: 10px auto;
+  padding: 10px;
+  max-width: 500px;
+  border-radius: 6px;
+}
+
+input {
+  width: 60px;
+  text-align: center;
+}
+</style>
 </head>
 
 <body>
 
-  <!-- LOGOS -->
-  <div class="logo-container">
-    <img src="assets/fall-line.png" alt="Fall Line Logo" class="logo left" />
-    <img src="assets/putting-league.png" alt="Putting League Logo" class="logo right" />
+<img class="logo left" src="https://raw.githubusercontent.com/DewFlunky/Putting-League-v8/main/fall-line.png">
+<img class="logo right" src="https://raw.githubusercontent.com/DewFlunky/Putting-League-v8/main/putting-league.png">
+
+<!-- SPLASH -->
+<div id="splash" class="center">
+  <h1>Fall Line Putting League</h1>
+  <button onclick="startLeague()">Enter League</button>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden center">
+
+  <div id="teamsSection" class="card">
+    <h2>Teams</h2>
+    <button onclick="randomizeTeams()">Randomize Teams</button>
+    <div id="teams"></div>
   </div>
 
-  <!-- SPLASH / ANIMATION -->
-  <div id="splashScreen">
-    <h1>Fall Line Putting League</h1>
-    <button onclick="startLeague()">Enter League</button>
+  <div id="scoresSection" class="card hidden">
+    <h2>Enter Scores</h2>
+    <div id="scoreInputs"></div>
+    <button onclick="submitScores()">Submit</button>
+    <button onclick="goBack()">⬅ Back</button>
   </div>
 
-  <!-- MAIN APP -->
-  <div id="app" class="hidden">
-
-    <section id="teamSection">
-      <h2>Teams</h2>
-      <button onclick="randomizeTeams()">Randomize Teams</button>
-      <div id="teams"></div>
-    </section>
-
-    <section id="scoreSection">
-      <h2>Enter Scores</h2>
-      <div id="scoreInputs"></div>
-      <button onclick="submitScores()">Submit Round</button>
-      <button onclick="goBack()">⬅ Back</button>
-    </section>
-
-    <section id="standingsSection">
-      <h2>Standings</h2>
-      <div id="standings"></div>
-      <button onclick="nextRound()">Next Round</button>
-    </section>
-
+  <div id="standingsSection" class="card hidden">
+    <h2>Standings</h2>
+    <div id="standings"></div>
+    <button onclick="nextRound()">Next Round</button>
   </div>
 
-  <!-- JS -->
-  <script src="script.js"></script>
+</div>
+
+<script>
+let teams = [];
+let round = 1;
+
+function startLeague() {
+  splash.classList.add("hidden");
+  app.classList.remove("hidden");
+}
+
+function randomizeTeams() {
+  teams = [];
+  const names = ["A","B","C","D","E","F","G","H"];
+  while (names.length) {
+    const a = names.splice(Math.floor(Math.random()*names.length),1)[0];
+    const b = names.splice(Math.floor(Math.random()*names.length),1)[0];
+    teams.push({name:`Team ${a}${b}`, score:0, pd:0});
+  }
+  renderTeams();
+}
+
+function renderTeams() {
+  teamsDiv = document.getElementById("teams");
+  teamsDiv.innerHTML = "";
+  teams.forEach(t => {
+    teamsDiv.innerHTML += `<div>${t.name}</div>`;
+  });
+  scoresSection.classList.remove("hidden");
+  renderScoreInputs();
+}
+
+function renderScoreInputs() {
+  scoreInputs.innerHTML = "";
+  teams.forEach((t,i) => {
+    scoreInputs.innerHTML += `
+      <div>${t.name}
+        <input type="number" id="s${i}">
+      </div>`;
+  });
+}
+
+function submitScores() {
+  teams.forEach((t,i) => {
+    const val = Number(document.getElementById(`s${i}`).value || 0);
+    t.score += val;
+  });
+  calculatePD();
+  showStandings();
+}
+
+function calculatePD() {
+  const avg = teams.reduce((a,b)=>a+b.score,0)/teams.length;
+  teams.forEach(t => t.pd = t.score - avg);
+}
+
+function showStandings() {
+  standingsSection.classList.remove("hidden");
+  standings.innerHTML = "";
+  teams
+    .sort((a,b)=>b.pd-a.pd)
+    .forEach(t=>{
+      standings.innerHTML += `<div>${t.name} | PD: ${t.pd}</div>`;
+    });
+}
+
+function nextRound() {
+  round++;
+  scoresSection.classList.add("hidden");
+}
+
+function goBack() {
+  scoresSection.classList.remove("hidden");
+  standingsSection.classList.add("hidden");
+}
+</script>
 
 </body>
 </html>
